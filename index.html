@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>For You 🌸</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --void:#06000F;
+  --deep:#0E0120;
+  --violet:#1E0A3C;
+  --plum:#3B0F5E;
+  --pink:#FF2D78;
+  --rose:#FF6B9D;
+  --lilac:#C084FC;
+  --lavender:#E0AAFF;
+  --gold:#FFD580;
+  --cream:#FFF0FB;
+  --white:#FFFFFF;
+  --serif:'Playfair Display',Georgia,serif;
+  --sans:'Inter',system-ui,sans-serif;
+}
+
+html{scroll-behavior:smooth;font-size:16px}
+body{
+  background:var(--void);
+  color:var(--cream);
+  font-family:var(--sans);
+  font-weight:300;
+  overflow-x:hidden;
+  line-height:1.7;
+}
+
+/* ══════════════════════════════
+   CANVAS & GLOBAL BLOBS
+══════════════════════════════ */
+#blob-canvas{
+  position:fixed;inset:0;z-index:0;
+  pointer-events:none;
+  opacity:.55;
+}
+
+/* ══════════════════════════════
+   SCROLL PROGRESS BAR
+══════════════════════════════ */
+#progress{
+  position:fixed;top:0;left:0;height:2px;z-index:100;
+  background:linear-gradient(90deg,var(--pink),var(--lilac),var(--gold));
+  width:0%;
+  transition:width .05s linear;
+  box-shadow:0 0 8px var(--pink);
+}
+
+/* ══════════════════════════════
+   NAV DOTS
+══════════════════════════════ */
+#nav{
+  position:fixed;right:20px;top:50%;transform:translateY(-50%);
+  z-index:99;display:flex;flex-direction:column;gap:10px;
+}
+.dot{
+  width:8px;height:8px;border-radius:50%;
+  background:rgba(255,255,255,.25);
+  cursor:pointer;transition:all .3s;
+  border:none;padding:0;
+}
+.dot.active{background:var(--rose);transform:scale(1.5);box-shadow:0 0 8px var(--pink)}
+
+/* ══════════════════════════════
+   SECTIONS BASE
+══════════════════════════════ */
+.page{
+  position:relative;
+  min-height:100vh;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:80px 24px;
+  z-index:1;
+  overflow:hidden;
+}
+
+/* fade-in on scroll */
+.reveal{
+  opacity:0;
+  transform:translateY(40px);
+  transition:opacity .9s cubic-bezier(.4,0,.2,1),transform .9s cubic-bezier(.4,0,.2,1);
+}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+/* ══════════════════════════════
+   FLOATING PARTICLES (global)
+══════════════════════════════ */
+.petal{
+  position:fixed;
+  pointer-events:none;z-index:0;
+  border-radius:50% 0 50% 0;
+  animation:petal-fall linear infinite;
+  opacity:0;
+}
+@keyframes petal-fall{
+  0%{opacity:0;transform:translateY(-20px) rotate(0deg)}
+  10%{opacity:.7}
+  90%{opacity:.4}
+  100%{opacity:0;transform:translateY(105vh) rotate(540deg)}
+}
+
+/* ══════════════════════════════
+   §1 — OPENING SPLASH
+══════════════════════════════ */
+#s1{
+  background:radial-gradient(ellipse 80% 70% at 50% 60%,#2a0045 0%,var(--void) 65%);
+  text-align:center;
+}
+
+/* envelope */
+#envelope{
+  width:160px;height:120px;position:relative;
+  cursor:pointer;margin:0 auto 48px;
+  filter:drop-shadow(0 0 32px rgba(255,45,120,.5));
+  transition:transform .3s;
+}
+#envelope:hover{transform:scale(1.05) rotate(-2deg)}
+#envelope:active{transform:scale(.96)}
+
+.env-body{
+  position:absolute;bottom:0;left:0;right:0;height:95px;
+  background:linear-gradient(160deg,#9b0a4e,#5e0030);
+  border-radius:4px 4px 10px 10px;
+}
+.env-flap{
+  position:absolute;top:0;left:0;right:0;
+  width:0;height:0;
+  border-left:80px solid transparent;
+  border-right:80px solid transparent;
+  border-top:60px solid #c40d64;
+  transform-origin:top center;
+  transition:transform .6s cubic-bezier(.4,0,.2,1);
+}
+#envelope:hover .env-flap{transform:rotateX(55deg)}
+.env-shine{
+  position:absolute;bottom:0;left:0;right:0;height:95px;
+  border-radius:4px 4px 10px 10px;
+  background:linear-gradient(135deg,rgba(255,255,255,.08) 0%,transparent 50%);
+  pointer-events:none;
+}
+.env-icon{
+  position:absolute;bottom:28px;left:50%;transform:translateX(-50%);
+  font-size:40px;z-index:2;
+  animation:heartbeat 1.4s ease-in-out infinite;
+}
+@keyframes heartbeat{
+  0%,100%{transform:translateX(-50%) scale(1)}
+  15%{transform:translateX(-50%) scale(1.25)}
+  30%{transform:translateX(-50%) scale(1)}
+  45%{transform:translateX(-50%) scale(1.12)}
+  60%{transform:translateX(-50%) scale(1)}
+}
+
+#s1 h1{
+  font-family:var(--serif);
+  font-size:clamp(38px,10vw,80px);
+  font-weight:700;
+  line-height:1.05;
+  letter-spacing:-.02em;
+  color:var(--cream);
+  text-shadow:0 0 60px rgba(255,45,120,.4);
+  margin-bottom:20px;
+}
+#s1 h1 em{
+  font-style:italic;
+  color:var(--rose);
+  display:block;
+}
+#s1 .sub{
+  font-size:clamp(14px,3vw,18px);
+  color:rgba(224,170,255,.7);
+  letter-spacing:.05em;
+  margin-bottom:40px;
+}
+.scroll-hint{
+  position:absolute;bottom:36px;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  color:rgba(255,255,255,.3);font-size:12px;letter-spacing:.12em;
+  animation:hint-bob 2s ease-in-out infinite;
+}
+@keyframes hint-bob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(6px)}}
+.scroll-arrow{
+  width:18px;height:18px;
+  border-right:1.5px solid rgba(255,255,255,.3);
+  border-bottom:1.5px solid rgba(255,255,255,.3);
+  transform:rotate(45deg);
+}
+
+/* ══════════════════════════════
+   §2 — WHY YOU'RE SPECIAL
+══════════════════════════════ */
+#s2{background:radial-gradient(ellipse 100% 80% at 20% 50%,#1a003d 0%,var(--void) 70%)}
+
+.section-label{
+  font-size:11px;letter-spacing:.25em;
+  color:var(--rose);
+  text-transform:uppercase;
+  margin-bottom:16px;
+  font-weight:500;
+}
+.section-title{
+  font-family:var(--serif);
+  font-size:clamp(28px,6vw,52px);
+  font-weight:700;
+  line-height:1.15;
+  color:var(--cream);
+  margin-bottom:48px;
+  text-align:center;
+}
+.section-title span{color:var(--lilac)}
+
+.cards-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:20px;
+  width:100%;max-width:900px;
+}
+.card{
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(192,132,252,.2);
+  border-radius:20px;
+  padding:28px 24px;
+  position:relative;
+  overflow:hidden;
+  transition:transform .3s,border-color .3s,box-shadow .3s;
+  backdrop-filter:blur(12px);
+}
+.card::before{
+  content:'';position:absolute;inset:0;border-radius:inherit;
+  background:linear-gradient(135deg,rgba(255,45,120,.06),transparent 60%);
+  pointer-events:none;
+}
+.card:hover{
+  transform:translateY(-6px) scale(1.01);
+  border-color:rgba(255,107,157,.4);
+  box-shadow:0 20px 60px rgba(255,45,120,.12);
+}
+.card-icon{font-size:32px;margin-bottom:14px;display:block}
+.card-title{
+  font-family:var(--serif);font-size:19px;font-weight:700;
+  color:var(--lavender);margin-bottom:8px;
+}
+.card-text{font-size:14px;color:rgba(255,240,251,.6);line-height:1.75}
+
+/* ══════════════════════════════
+   §3 — MOMENTS / MEMORIES
+══════════════════════════════ */
+#s3{
+  background:radial-gradient(ellipse 90% 70% at 80% 40%,#200040 0%,var(--void) 65%);
+}
+.timeline{
+  width:100%;max-width:680px;
+  position:relative;
+  padding-left:0;
+}
+.timeline::before{
+  content:'';
+  position:absolute;left:28px;top:0;bottom:0;
+  width:1px;
+  background:linear-gradient(to bottom,transparent,rgba(192,132,252,.4) 15%,rgba(255,45,120,.5) 50%,rgba(192,132,252,.4) 85%,transparent);
+}
+.moment{
+  display:flex;gap:24px;
+  margin-bottom:52px;
+  align-items:flex-start;
+}
+.moment-dot{
+  width:56px;min-width:56px;height:56px;
+  border-radius:50%;
+  background:rgba(255,45,120,.1);
+  border:1px solid rgba(255,45,120,.4);
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;
+  box-shadow:0 0 20px rgba(255,45,120,.15);
+  position:relative;z-index:1;
+  flex-shrink:0;
+}
+.moment-body{padding-top:12px}
+.moment-tag{
+  font-size:11px;letter-spacing:.18em;color:var(--rose);
+  font-weight:500;text-transform:uppercase;margin-bottom:6px;
+}
+.moment-title{
+  font-family:var(--serif);font-size:22px;font-weight:700;
+  color:var(--cream);margin-bottom:8px;
+}
+.moment-desc{font-size:14px;color:rgba(255,240,251,.55);line-height:1.8}
+
+/* ══════════════════════════════
+   §4 — THINGS I LOVE
+══════════════════════════════ */
+#s4{background:radial-gradient(ellipse 80% 90% at 50% 20%,#15003b 0%,var(--void) 70%)}
+
+.love-list{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  gap:16px;
+  width:100%;max-width:800px;
+}
+.love-item{
+  display:flex;gap:16px;align-items:flex-start;
+  padding:20px;
+  background:rgba(255,255,255,.03);
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.07);
+  transition:background .3s,border-color .3s;
+}
+.love-item:hover{background:rgba(255,45,120,.05);border-color:rgba(255,107,157,.2)}
+.love-num{
+  font-family:var(--serif);
+  font-size:36px;font-weight:700;
+  color:rgba(255,45,120,.2);
+  line-height:1;min-width:36px;
+  margin-top:-4px;
+}
+.love-text{
+  font-family:var(--serif);
+  font-size:16px;font-weight:400;font-style:italic;
+  color:rgba(255,240,251,.8);line-height:1.6;
+}
+
+/* ══════════════════════════════
+   §5 — POEM
+══════════════════════════════ */
+#s5{
+  background:
+    radial-gradient(ellipse 60% 60% at 30% 70%,rgba(255,45,120,.12) 0%,transparent 60%),
+    radial-gradient(ellipse 60% 60% at 70% 30%,rgba(192,132,252,.1) 0%,transparent 60%),
+    var(--void);
+  text-align:center;
+}
+.poem-wrap{
+  max-width:560px;
+  position:relative;padding:60px 48px;
+}
+.poem-wrap::before,.poem-wrap::after{
+  content:'"';
+  position:absolute;
+  font-family:var(--serif);font-size:140px;font-weight:700;line-height:1;
+  color:rgba(255,45,120,.08);
+}
+.poem-wrap::before{top:-10px;left:0}
+.poem-wrap::after{content:'"';bottom:-40px;right:0}
+.poem{
+  font-family:var(--serif);
+  font-size:clamp(18px,4vw,24px);
+  font-style:italic;
+  line-height:2.1;
+  color:var(--lavender);
+  letter-spacing:.01em;
+}
+.poem strong{color:var(--gold);font-weight:400}
+.poem-credit{
+  margin-top:40px;
+  font-size:13px;letter-spacing:.12em;
+  color:rgba(255,255,255,.3);
+  text-transform:uppercase;
+}
+
+/* ══════════════════════════════
+   §6 — PROMISES & WISHES
+══════════════════════════════ */
+#s6{background:radial-gradient(ellipse 100% 80% at 60% 80%,#1f0040 0%,var(--void) 65%)}
+
+.promises{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:24px;
+  width:100%;max-width:900px;
+}
+.promise{
+  text-align:center;
+  padding:36px 24px;
+  border-radius:24px;
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(192,132,252,.12);
+  position:relative;overflow:hidden;
+  transition:transform .3s,box-shadow .3s;
+}
+.promise:hover{
+  transform:translateY(-4px);
+  box-shadow:0 24px 64px rgba(192,132,252,.12);
+}
+.promise::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--pink),transparent);
+  opacity:0;transition:opacity .3s;
+}
+.promise:hover::after{opacity:1}
+.promise-emoji{font-size:36px;margin-bottom:16px;display:block}
+.promise-title{
+  font-family:var(--serif);font-size:18px;font-weight:700;
+  color:var(--lavender);margin-bottom:10px;
+}
+.promise-desc{font-size:13px;color:rgba(255,240,251,.5);line-height:1.75}
+
+/* ══════════════════════════════
+   §7 — CLOSING
+══════════════════════════════ */
+#s7{
+  background:radial-gradient(ellipse 90% 80% at 50% 50%,#2a0048 0%,var(--void) 70%);
+  text-align:center;
+  min-height:100vh;
+}
+#s7 h2{
+  font-family:var(--serif);
+  font-size:clamp(32px,8vw,68px);
+  font-weight:700;line-height:1.1;
+  color:var(--cream);
+  text-shadow:0 0 60px rgba(255,45,120,.3);
+  margin-bottom:28px;
+}
+#s7 h2 em{font-style:italic;color:var(--gold)}
+#s7 p{
+  font-size:clamp(15px,3vw,19px);
+  color:rgba(224,170,255,.7);
+  max-width:480px;line-height:1.9;
+  margin:0 auto 48px;
+}
+
+/* heart orbit */
+.orbit{
+  position:relative;width:120px;height:120px;margin:0 auto 48px;
+}
+.orbit-center{
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  font-size:36px;
+  animation:heartbeat 1.4s ease-in-out infinite;
+}
+.orbit-item{
+  position:absolute;top:50%;left:50%;
+  font-size:16px;
+  animation:spin var(--d,5s) linear infinite;
+}
+@keyframes spin{
+  from{transform:rotate(0deg) translateX(var(--r,50px)) rotate(0deg)}
+  to{transform:rotate(360deg) translateX(var(--r,50px)) rotate(-360deg)}
+}
+
+.btn-love{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:16px 40px;
+  background:linear-gradient(135deg,var(--pink),#9b1a6a);
+  color:white;
+  border:none;border-radius:60px;
+  font-family:var(--sans);font-size:15px;font-weight:500;letter-spacing:.05em;
+  cursor:pointer;
+  box-shadow:0 8px 40px rgba(255,45,120,.4);
+  transition:transform .2s,box-shadow .2s;
+}
+.btn-love:hover{transform:translateY(-3px) scale(1.03);box-shadow:0 16px 56px rgba(255,45,120,.6)}
+.btn-love:active{transform:scale(.96)}
+
+/* signature */
+.final-sig{
+  margin-top:60px;
+  font-family:var(--serif);
+  font-size:clamp(28px,6vw,48px);
+  font-style:italic;
+  font-weight:600;
+  color:rgba(255,215,128,.5);
+  letter-spacing:.03em;
+}
+
+/* burst */
+.burst-p{
+  position:fixed;pointer-events:none;z-index:200;
+  font-size:20px;
+  animation:burst 1.4s ease-out forwards;
+}
+@keyframes burst{
+  0%{opacity:1;transform:translate(0,0) scale(1)}
+  100%{opacity:0;transform:translate(var(--dx,0px),var(--dy,-120px)) scale(2)}
+}
+
+/* gradient separators */
+.sep{
+  width:80px;height:2px;
+  background:linear-gradient(90deg,transparent,var(--pink),transparent);
+  margin:0 auto 44px;border-radius:1px;
+}
+
+/* ══════════════════════════════
+   RESPONSIVE
+══════════════════════════════ */
+@media(max-width:600px){
+  .timeline::before{left:22px}
+  .moment-dot{width:44px;min-width:44px;height:44px;font-size:18px}
+  .timeline{padding-left:0}
+  .poem-wrap{padding:40px 20px}
+  .poem-wrap::before,.poem-wrap::after{font-size:80px}
+  #nav{right:10px}
+}
+@media(prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+<canvas id="blob-canvas"></canvas>
+
+<nav id="nav" aria-label="Page sections">
+  <button class="dot active" onclick="goTo(0)" aria-label="Section 1"></button>
+  <button class="dot" onclick="goTo(1)" aria-label="Section 2"></button>
+  <button class="dot" onclick="goTo(2)" aria-label="Section 3"></button>
+  <button class="dot" onclick="goTo(3)" aria-label="Section 4"></button>
+  <button class="dot" onclick="goTo(4)" aria-label="Section 5"></button>
+  <button class="dot" onclick="goTo(5)" aria-label="Section 6"></button>
+  <button class="dot" onclick="goTo(6)" aria-label="Section 7"></button>
+</nav>
+
+<!-- ══ §1 SPLASH ══ -->
+<section class="page" id="s1">
+  <div id="envelope" onclick="burstOpen(event)">
+    <div class="env-body"></div>
+    <div class="env-flap"></div>
+    <div class="env-shine"></div>
+    <div class="env-icon">💌</div>
+  </div>
+  <div class="reveal">
+    <p class="sub">something made just for you</p>
+    <h1>You are<em>extraordinary.</em></h1>
+  </div>
+  <div class="scroll-hint" aria-hidden="true">
+    <span>scroll</span>
+    <div class="scroll-arrow"></div>
+  </div>
+</section>
+
+<!-- ══ §2 WHY YOU'RE SPECIAL ══ -->
+<section class="page" id="s2">
+  <div class="reveal" style="text-align:center;width:100%;max-width:900px">
+    <p class="section-label">chapter one</p>
+    <h2 class="section-title">Why you're <span>so special</span></h2>
+    <div class="cards-grid">
+      <div class="card">
+        <span class="card-icon">🌟</span>
+        <div class="card-title">The way you shine</div>
+        <p class="card-text">Even in the quietest moments, there's a brightness about you that lights up every room you walk into.</p>
+      </div>
+      <div class="card">
+        <span class="card-icon">🌊</span>
+        <div class="card-title">Your depth</div>
+        <p class="card-text">You feel everything fully — joy, wonder, love. That's not weakness, that's the most beautiful kind of strength.</p>
+      </div>
+      <div class="card">
+        <span class="card-icon">🌸</span>
+        <div class="card-title">Your kindness</div>
+        <p class="card-text">The way you care for others — softly, genuinely — it's one of the rarest and most precious things in this world.</p>
+      </div>
+      <div class="card">
+        <span class="card-icon">🦋</span>
+        <div class="card-title">Your courage</div>
+        <p class="card-text">You keep going, keep growing, keep becoming. That quiet courage in you is nothing short of breathtaking.</p>
+      </div>
+      <div class="card">
+        <span class="card-icon">🌙</span>
+        <div class="card-title">Your mystery</div>
+        <p class="card-text">There are layers to you the world will spend a lifetime discovering. Every new side is a gift.</p>
+      </div>
+      <div class="card">
+        <span class="card-icon">💫</span>
+        <div class="card-title">Your presence</div>
+        <p class="card-text">Just being near you feels like finding warmth on a cold night. You are home.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ §3 MOMENTS ══ -->
+<section class="page" id="s3">
+  <div class="reveal" style="width:100%;max-width:680px">
+    <p class="section-label" style="text-align:center">chapter two</p>
+    <h2 class="section-title">Moments that <span>stay with me</span></h2>
+    <div class="timeline">
+      <div class="moment">
+        <div class="moment-dot">🌅</div>
+        <div class="moment-body">
+          <div class="moment-tag">first chapter</div>
+          <div class="moment-title">The moment I noticed</div>
+          <p class="moment-desc">There was something about you — the way you laughed, the way you spoke — that made time slow down just a little.</p>
+        </div>
+      </div>
+      <div class="moment">
+        <div class="moment-dot">☕</div>
+        <div class="moment-body">
+          <div class="moment-tag">small things</div>
+          <div class="moment-title">The ordinary magic</div>
+          <p class="moment-desc">The little things — a text, a glance, a shared silence — that became the most extraordinary parts of my days.</p>
+        </div>
+      </div>
+      <div class="moment">
+        <div class="moment-dot">🌧️</div>
+        <div class="moment-body">
+          <div class="moment-tag">hard days</div>
+          <div class="moment-title">When the world got heavy</div>
+          <p class="moment-desc">You didn't try to fix everything. You just stayed. And somehow that was everything I needed.</p>
+        </div>
+      </div>
+      <div class="moment">
+        <div class="moment-dot">🎉</div>
+        <div class="moment-body">
+          <div class="moment-tag">joy</div>
+          <div class="moment-title">When we laughed too loud</div>
+          <p class="moment-desc">Those moments of pure, unfiltered happiness — the kind that makes your whole body laugh — I'd collect them all and keep them forever.</p>
+        </div>
+      </div>
+      <div class="moment">
+        <div class="moment-dot">🌠</div>
+        <div class="moment-body">
+          <div class="moment-tag">always</div>
+          <div class="moment-title">Every single moment</div>
+          <p class="moment-desc">I want to hold all of them. Every laugh, every quiet night, every adventure yet to come.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ §4 THINGS I LOVE ══ -->
+<section class="page" id="s4">
+  <div class="reveal" style="text-align:center;width:100%;max-width:800px">
+    <p class="section-label">chapter three</p>
+    <h2 class="section-title">Things I love <span>about you</span></h2>
+    <div class="love-list">
+      <div class="love-item"><div class="love-num">1</div><div class="love-text">The way your eyes light up when something truly excites you</div></div>
+      <div class="love-item"><div class="love-num">2</div><div class="love-text">How you make even the mundane feel like a little adventure</div></div>
+      <div class="love-item"><div class="love-num">3</div><div class="love-text">Your laugh — the real one, not the polite one</div></div>
+      <div class="love-item"><div class="love-num">4</div><div class="love-text">The way you think — deeply, curiously, beautifully</div></div>
+      <div class="love-item"><div class="love-num">5</div><div class="love-text">How you care, quietly and completely, without needing applause</div></div>
+      <div class="love-item"><div class="love-num">6</div><div class="love-text">The little habits that are entirely, perfectly you</div></div>
+      <div class="love-item"><div class="love-num">7</div><div class="love-text">Your strength, even when you don't feel strong</div></div>
+      <div class="love-item"><div class="love-num">8</div><div class="love-text">The warmth you give to everyone lucky enough to know you</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ §5 POEM ══ -->
+<section class="page" id="s5">
+  <div class="reveal">
+    <p class="section-label" style="text-align:center">chapter four</p>
+    <h2 class="section-title" style="margin-bottom:12px">A little <span>poem</span></h2>
+    <div class="sep"></div>
+    <div class="poem-wrap">
+      <p class="poem">
+        You are made of <strong>morning light</strong><br>
+        and all the quiet things<br>
+        the world keeps forgetting<br>
+        to notice.<br><br>
+        You are the warmth<br>
+        inside a <strong>cold season</strong>,<br>
+        the kind of rare<br>
+        that doesn't know it's rare.<br><br>
+        And every universe<br>
+        in every timeline<br>
+        chooses <strong>you</strong>.
+      </p>
+      <p class="poem-credit">— written for you, only you</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══ §6 PROMISES ══ -->
+<section class="page" id="s6">
+  <div class="reveal" style="text-align:center;width:100%;max-width:900px">
+    <p class="section-label">chapter five</p>
+    <h2 class="section-title">Wishes &amp; <span>promises</span></h2>
+    <div class="promises">
+      <div class="promise">
+        <span class="promise-emoji">🌙</span>
+        <div class="promise-title">Always a soft place</div>
+        <p class="promise-desc">I promise to be somewhere safe when the world feels too loud.</p>
+      </div>
+      <div class="promise">
+        <span class="promise-emoji">🌺</span>
+        <div class="promise-title">To celebrate you</div>
+        <p class="promise-desc">Every win, every small victory, every brave thing you do — I'll be cheering loudest.</p>
+      </div>
+      <div class="promise">
+        <span class="promise-emoji">⭐</span>
+        <div class="promise-title">To see you clearly</div>
+        <p class="promise-desc">Not the version you think you are on hard days — the full, real, magnificent you.</p>
+      </div>
+      <div class="promise">
+        <span class="promise-emoji">🫂</span>
+        <div class="promise-title">To stay</div>
+        <p class="promise-desc">Through seasons, through change, through all the chapters still unwritten.</p>
+      </div>
+      <div class="promise">
+        <span class="promise-emoji">✨</span>
+        <div class="promise-title">To keep choosing you</div>
+        <p class="promise-desc">Every single day, in every small way — always, always you.</p>
+      </div>
+      <div class="promise">
+        <span class="promise-emoji">💛</span>
+        <div class="promise-title">To love you well</div>
+        <p class="promise-desc">Patiently, deeply, wholeheartedly — the way you've always deserved.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ §7 CLOSING ══ -->
+<section class="page" id="s7">
+  <div class="reveal">
+    <div class="orbit">
+      <div class="orbit-center">💖</div>
+      <div class="orbit-item" style="--d:3s;--r:50px">🌸</div>
+      <div class="orbit-item" style="--d:4.5s;--r:50px;animation-delay:-1.5s">✨</div>
+      <div class="orbit-item" style="--d:3.8s;--r:50px;animation-delay:-2.4s">🌟</div>
+      <div class="orbit-item" style="--d:5s;--r:50px;animation-delay:-3.6s">💫</div>
+    </div>
+    <h2>You are so<br><em>deeply loved.</em></h2>
+    <p>This isn't just a website. It's a small window into something that's hard to put into words — how much you matter, how much you're seen, how much you're cherished.</p>
+    <button class="btn-love" onclick="endBurst(event)">I feel it 💖</button>
+    <div class="final-sig">forever &amp; always ✨</div>
+  </div>
+</section>
+
+<script>
+/* ══════════════════════════════
+   BLOB CANVAS
+══════════════════════════════ */
+(function(){
+  const cv=document.getElementById('blob-canvas');
+  const ctx=cv.getContext('2d');
+  let W,H,t=0;
+  const blobs=[
+    {x:.3,y:.5,r:.28,c:'rgba(192,132,252,',spd:.0004,ox:.12,oy:.08},
+    {x:.7,y:.35,r:.22,c:'rgba(255,45,120,',spd:.0006,ox:.09,oy:.12},
+    {x:.5,y:.75,r:.2,c:'rgba(255,107,157,',spd:.0005,ox:.11,oy:.07},
+    {x:.2,y:.2,r:.18,c:'rgba(59,15,94,',spd:.0003,ox:.06,oy:.1},
+    {x:.8,y:.7,r:.24,c:'rgba(100,0,180,',spd:.00045,ox:.1,oy:.09},
+  ];
+  function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight}
+  resize();window.addEventListener('resize',resize);
+
+  function blobPath(cx,cy,r,t,seed){
+    ctx.beginPath();
+    const pts=8;
+    for(let i=0;i<=pts;i++){
+      const a=(i/pts)*Math.PI*2;
+      const wobble=1+.22*Math.sin(a*3+t*seed+seed)
+                    +.1*Math.cos(a*5+t*seed*.7);
+      const px=cx+Math.cos(a)*r*wobble;
+      const py=cy+Math.sin(a)*r*wobble;
+      i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+    }
+    ctx.closePath();
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    t+=1;
+    blobs.forEach((b,i)=>{
+      const cx=(b.x+Math.sin(t*b.spd+i)*b.ox)*W;
+      const cy=(b.y+Math.cos(t*b.spd*1.3+i)*b.oy)*H;
+      const rad=b.r*Math.min(W,H);
+      const g=ctx.createRadialGradient(cx,cy,0,cx,cy,rad);
+      g.addColorStop(0,b.c+'0.18)');
+      g.addColorStop(.5,b.c+'0.09)');
+      g.addColorStop(1,b.c+'0)');
+      ctx.fillStyle=g;
+      blobPath(cx,cy,rad,t,i+1.5);
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ══════════════════════════════
+   PETALS
+══════════════════════════════ */
+(function(){
+  const cols=['#FF6B9D','#C084FC','#FF2D78','#FFD580','#E0AAFF','#ff99cc'];
+  for(let i=0;i<22;i++){
+    const p=document.createElement('div');
+    p.className='petal';
+    const sz=6+Math.random()*10;
+    p.style.cssText=`
+      left:${Math.random()*100}%;
+      width:${sz}px;height:${sz*1.5}px;
+      background:${cols[i%cols.length]};
+      animation-duration:${7+Math.random()*10}s;
+      animation-delay:${-Math.random()*14}s;
+      border-radius:${Math.random()>.5?'50% 0 50% 0':'0 50% 0 50%'};
+      z-index:0;
+    `;
+    document.body.appendChild(p);
+  }
+})();
+
+/* ══════════════════════════════
+   SCROLL PROGRESS + DOTS
+══════════════════════════════ */
+const sections=Array.from(document.querySelectorAll('.page'));
+const dots=Array.from(document.querySelectorAll('.dot'));
+const progress=document.getElementById('progress');
+
+function onScroll(){
+  const scrolled=window.scrollY;
+  const total=document.body.scrollHeight-window.innerHeight;
+  progress.style.width=(scrolled/total*100)+'%';
+
+  // active dot
+  let cur=0;
+  sections.forEach((s,i)=>{
+    if(s.getBoundingClientRect().top<=window.innerHeight*.5) cur=i;
+  });
+  dots.forEach((d,i)=>{d.classList.toggle('active',i===cur)});
+
+  // reveal
+  document.querySelectorAll('.reveal').forEach(el=>{
+    if(el.getBoundingClientRect().top<window.innerHeight*.88)
+      el.classList.add('visible');
+  });
+}
+window.addEventListener('scroll',onScroll,{passive:true});
+// initial reveal for first section
+setTimeout(()=>{
+  document.querySelectorAll('#s1 .reveal').forEach(el=>el.classList.add('visible'));
+},400);
+
+function goTo(i){sections[i].scrollIntoView({behavior:'smooth'})}
+
+/* ══════════════════════════════
+   ENVELOPE OPEN
+══════════════════════════════ */
+function burstOpen(e){
+  sprayBurst(e.clientX||window.innerWidth/2, e.clientY||window.innerHeight/2, 16);
+  const env=document.getElementById('envelope');
+  env.style.transform='scale(1.15)';
+  env.style.filter='drop-shadow(0 0 60px rgba(255,45,120,.9))';
+  setTimeout(()=>{
+    env.style.transition='opacity .5s';
+    env.style.opacity='0';
+  },600);
+}
+
+/* ══════════════════════════════
+   BURST PARTICLES
+══════════════════════════════ */
+function sprayBurst(ox,oy,count){
+  const emojis=['💖','✨','🌸','💫','🌟','💕','🎀','🦋'];
+  for(let i=0;i<count;i++){
+    setTimeout(()=>{
+      const b=document.createElement('div');
+      b.className='burst-p';
+      const angle=Math.random()*Math.PI*2;
+      const dist=60+Math.random()*120;
+      b.textContent=emojis[Math.floor(Math.random()*emojis.length)];
+      b.style.cssText=`
+        left:${ox-12}px;top:${oy-12}px;
+        --dx:${Math.cos(angle)*dist}px;
+        --dy:${Math.sin(angle)*dist-80}px;
+        animation-delay:${Math.random()*.2}s;
+        font-size:${14+Math.random()*18}px;
+      `;
+      document.body.appendChild(b);
+      setTimeout(()=>b.remove(),1600);
+    },i*35);
+  }
+}
+
+function endBurst(e){
+  const r=e.currentTarget.getBoundingClientRect();
+  sprayBurst(r.left+r.width/2, r.top+r.height/2, 20);
+  const btn=e.currentTarget;
+  btn.textContent='💖 Love received! 💖';
+  setTimeout(()=>{btn.textContent='I feel it 💖'},3500);
+}
+</script>
+</body>
+</html>
